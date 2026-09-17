@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HelperAI</title>
-    
-    <!-- Estilos de Highlight.js (Tema oscuro) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 
     <style>
         :root {
@@ -130,7 +127,7 @@
             overflow-x: auto; /* Permite scroll horizontal fluido en móviles */
         }
 
-        pre code.hljs {
+        pre code {
             display: block;
             padding: 1rem;
             font-family: 'Courier New', Courier, monospace;
@@ -138,6 +135,7 @@
             white-space: pre; /* Mantiene las tabulaciones y espacios originales intactos */
             word-break: normal;
             word-wrap: normal;
+            color: #e5e5e5;
         }
 
         .input-container {
@@ -203,22 +201,13 @@
         </div>
     </div>
 
-    <!-- Librerías externas -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-
     <!-- Archivo de configuración que contiene tu API Key inyectada -->
     <script src="config.js"></script>
 
-    <script>
-        // Configuración de Marked para manejar saltos de línea correctamente
-        if (typeof marked !== 'undefined') {
-            marked.setOptions({
-                breaks: true,
-                gfm: true
-            });
-        }
+    <!-- Tu propio motor de Markdown -->
+    <script src="markdown.html"></script>
 
+    <script>
         // Obtiene la API Key de config.js de manera segura
         const GROQ_API_KEY = (window.CONFIG && window.CONFIG.GROQ_API_KEY) ? window.CONFIG.GROQ_API_KEY : ""; 
         const API_URL = "https://api.groq.com/openai/v1/chat/completions";
@@ -286,54 +275,15 @@
             const messageDiv = document.createElement('div');
             messageDiv.classList.add('message', sender);
 
-            if (isMarkdown && typeof marked !== 'undefined') {
-                messageDiv.innerHTML = marked.parse(text);
-                formatCodeBlocks(messageDiv);
+            if (isMarkdown && typeof renderMarkdown === 'function') {
+                // Llama a tu función personalizada del archivo markdown.html
+                messageDiv.innerHTML = renderMarkdown(text);
             } else {
                 messageDiv.textContent = text;
             }
 
             chatContainer.appendChild(messageDiv);
             chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-
-        function formatCodeBlocks(container) {
-            container.querySelectorAll('pre code').forEach((block) => {
-                if (block.parentElement.parentElement.classList.contains('code-block-wrapper')) return;
-
-                let language = Array.from(block.classList).find(cls => cls.startsWith('language-'));
-                language = language ? language.replace('language-', '').toUpperCase() : 'CODE';
-
-                const wrapper = document.createElement('div');
-                wrapper.className = 'code-block-wrapper';
-
-                const header = document.createElement('div');
-                header.className = 'code-header';
-                header.innerHTML = `
-                    <span>[${language}]</span>
-                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
-                `;
-
-                block.parentNode.parentNode.insertBefore(wrapper, block.parentNode);
-                wrapper.appendChild(header);
-                wrapper.appendChild(block.parentNode);
-            });
-
-            if (typeof hljs !== 'undefined') {
-                hljs.highlightAll();
-            }
-        }
-
-        function copyCode(button) {
-            const wrapper = button.closest('.code-block-wrapper');
-            const codeText = wrapper.querySelector('code').innerText;
-
-            navigator.clipboard.writeText(codeText).then(() => {
-                button.textContent = '¡Copiado!';
-                setTimeout(() => {
-                    button.textContent = 'Copiar';
-                }, 2000);
-            });
         }
     </script>
 </body>
