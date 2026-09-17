@@ -2,18 +2,20 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ main ] # O master, dependiendo de cómo se llame tu rama principal
+    branches: [ main ] # Cambia a 'master' si tu rama principal se llama así
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # <-- Esto otorga los permisos necesarios automáticamente
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Inject API Key securely
         run: |
-          # Esto busca el texto falso en tu config.js y lo cambia por tu secreto de GitHub de forma automática
+          # Reemplaza INJECTED_BY_GITHUB_ACTIONS por el secreto real de forma segura
           sed -i 's|INJECTED_BY_GITHUB_ACTIONS|${{ secrets.GROQ_API_KEY }}|g' config.js
 
       - name: Deploy to GitHub Pages
@@ -21,3 +23,4 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: .
+          commit_message: "Auto-update config with API key [skip ci]"
