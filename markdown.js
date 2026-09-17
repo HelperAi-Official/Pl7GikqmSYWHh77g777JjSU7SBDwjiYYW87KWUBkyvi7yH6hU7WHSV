@@ -1,26 +1,43 @@
-// markdown.js - Encargado de procesar el texto y los bloques de código
+// markdown.js
+
+// Configuración recomendada para marked + hljs
+if (typeof marked !== 'undefined' && typeof hljs !== 'undefined') {
+    marked.setOptions({
+        highlight: function(code, lang) {
+            if (lang && hljs.getLanguage(lang)) {
+                try {
+                    return hljs.highlight(code, { language: lang }).value;
+                } catch (_) {}
+            }
+            return hljs.highlightAuto(code).value;
+        },
+        breaks: true,
+        gfm: true
+    });
+}
 
 function renderMarkdown(text) {
     if (typeof marked !== 'undefined') {
         return marked.parse(text);
     }
-    // Si por alguna razón marked no cargó, regresa el texto plano con saltos de línea
+    // Fallback: texto plano con saltos de línea si marked no carga
     return text.replace(/\n/g, '<br>');
 }
 
 function setupCodeBlocks(container) {
     container.querySelectorAll('pre code').forEach((block) => {
-        if (block.parentElement.parentElement.classList.contains('code-block-wrapper')) return;
+        // Evitar procesar dos veces el mismo bloque
+        if (block.closest('.code-block-wrapper')) return;
 
-        // Detecta el lenguaje (ej: language-python -> PYTHON)
-        let language = Array.from(block.classList).find(cls => cls.startsWith('language-'));
-        language = language ? language.replace('language-', '').toUpperCase() : 'CODE';
+        // Detecta el lenguaje
+        let languageClass = Array.from(block.classList).find(cls => cls.startsWith('language-'));
+        let language = languageClass ? languageClass.replace('language-', '').toUpperCase() : 'CODE';
 
-        // Crea la burbuja contenedora del código
+        // Crear el wrapper
         const wrapper = document.createElement('div');
         wrapper.className = 'code-block-wrapper';
 
-        // Crea la cabecera con el lenguaje y el botón de copiar
+        // Crear la cabecera
         const header = document.createElement('div');
         header.className = 'code-header';
         header.innerHTML = `
@@ -28,13 +45,13 @@ function setupCodeBlocks(container) {
             <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
         `;
 
-        // Reorganiza los elementos en el DOM
-        block.parentNode.parentNode.insertBefore(wrapper, block.parentNode);
+        // Reestructurar el DOM
+        const preElement = block.parentNode;
+        preElement.parentNode.insertBefore(wrapper, preElement);
         wrapper.appendChild(header);
-        wrapper.appendChild(block.parentNode);
+        wrapper.appendChild(preElement);
     });
 
-    // Aplica el resaltado de sintaxis si highlight.js está disponible
     if (typeof hljs !== 'undefined') {
         hljs.highlightAll();
     }
