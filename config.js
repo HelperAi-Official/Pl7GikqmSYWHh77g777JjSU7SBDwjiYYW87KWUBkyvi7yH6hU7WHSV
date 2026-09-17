@@ -1,4 +1,4 @@
 // config.js
 window.CONFIG = {
-    GROQ_API_KEY: "INJECTED_BY_GITHUB_ACTIONS"
+    GROQ_API_KEY: "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"
 };
