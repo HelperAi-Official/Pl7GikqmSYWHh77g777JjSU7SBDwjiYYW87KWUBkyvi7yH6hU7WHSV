@@ -66,8 +66,8 @@
             border-radius: 1rem;
             line-height: 1.5;
             font-size: 0.95rem;
-            word-break: break-word;
-            white-space: pre-wrap;
+            word-break: normal;
+            overflow-wrap: break-word;
         }
 
         .message.user {
@@ -86,7 +86,7 @@
             border: 1px solid var(--border-color);
         }
 
-        /* Estilos limpios para los bloques de código */
+        /* Estilos optimizados para bloques de código con scroll horizontal y tabulaciones intactas */
         .code-block-wrapper {
             position: relative;
             margin: 0.8rem 0;
@@ -127,13 +127,17 @@
         pre {
             margin: 0 !important;
             background: transparent !important;
+            overflow-x: auto; /* Permite scroll horizontal fluido en móviles */
         }
 
         pre code.hljs {
+            display: block;
             padding: 1rem;
-            overflow-x: auto;
             font-family: 'Courier New', Courier, monospace;
             font-size: 0.88rem;
+            white-space: pre; /* Mantiene las tabulaciones y espacios originales intactos */
+            word-break: normal;
+            word-wrap: normal;
         }
 
         .input-container {
@@ -207,7 +211,15 @@
     <script src="config.js"></script>
 
     <script>
-        // Obtiene la API Key de config.js de manera segura (con respaldo por si acaso)
+        // Configuración de Marked para manejar saltos de línea correctamente
+        if (typeof marked !== 'undefined') {
+            marked.setOptions({
+                breaks: true,
+                gfm: true
+            });
+        }
+
+        // Obtiene la API Key de config.js de manera segura
         const GROQ_API_KEY = (window.CONFIG && window.CONFIG.GROQ_API_KEY) ? window.CONFIG.GROQ_API_KEY : ""; 
         const API_URL = "https://api.groq.com/openai/v1/chat/completions";
         const MODEL_NAME = "qwen/qwen3.8-27b";
