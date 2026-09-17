@@ -1,62 +1,49 @@
-// markdown.js
-
-// Configuración recomendada para marked + hljs
-if (typeof marked !== 'undefined' && typeof hljs !== 'undefined') {
-    marked.setOptions({
-        highlight: function(code, lang) {
-            if (lang && hljs.getLanguage(lang)) {
-                try {
-                    return hljs.highlight(code, { language: lang }).value;
-                } catch (_) {}
-            }
-            return hljs.highlightAuto(code).value;
-        },
-        breaks: true,
-        gfm: true
-    });
-}
+// markdown.js - Mini motor de Markdown propio
 
 function renderMarkdown(text) {
-    if (typeof marked !== 'undefined') {
-        return marked.parse(text);
-    }
-    // Fallback: texto plano con saltos de línea si marked no carga
-    return text.replace(/\n/g, '<br>');
-}
+    if (!text) return "";
 
-function setupCodeBlocks(container) {
-    container.querySelectorAll('pre code').forEach((block) => {
-        // Evitar procesar dos veces el mismo bloque
-        if (block.closest('.code-block-wrapper')) return;
+    // 1. Escapar HTML básico para seguridad (evita inyecciones extrañas)
+    let html = text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
 
-        // Detecta el lenguaje
-        let languageClass = Array.from(block.classList).find(cls => cls.startsWith('language-'));
-        let language = languageClass ? languageClass.replace('language-', '').toUpperCase() : 'CODE';
-
-        // Crear el wrapper
-        const wrapper = document.createElement('div');
-        wrapper.className = 'code-block-wrapper';
-
-        // Crear la cabecera
-        const header = document.createElement('div');
-        header.className = 'code-header';
-        header.innerHTML = `
-            <span>[${language}]</span>
-            <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
-        `;
-
-        // Reestructurar el DOM
-        const preElement = block.parentNode;
-        preElement.parentNode.insertBefore(wrapper, preElement);
-        wrapper.appendChild(header);
-        wrapper.appendChild(preElement);
+    // 2. Bloques de código (```lenguaje ... ```)
+    html = html.replace(/```([a-zA-Z]*)\n([\s\S]*?)```/g, (match, lang, code) => {
+        let language = lang ? lang.toUpperCase() : 'CODE';
+        return `
+        <div class="code-block-wrapper">
+            <div class="code-header">
+                <span>[${language}]</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+            </div>
+            <pre><code>${code.trim()}</code></pre>
+        </div>`;
     });
 
-    if (typeof hljs !== 'undefined') {
-        hljs.highlightAll();
-    }
+    // 3. Código en línea (`código`)
+    html = html.replace(/`([^`]+)`/g, '<code style="background: #2d2d30; padding: 2px 5px; border-radius: 4px; font-family: monospace;">$1</code>');
+
+    // 4. Negritas (**texto**)
+    html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+
+    // 5. Cursivas (*texto*)
+    html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+
+    // 6. Saltos de línea (convierte los \n en <br>)
+    html = html.replace(/\n/g, '<br>');
+
+    return html;
 }
 
+// Función auxiliar vacía para mantener compatibilidad si se llama
+function setupCodeBlocks(container) {
+    // Ya no necesita hacer nada porque el bloque de código se genera completo arriba,
+    // pero dejamos la función para que no rompa nada si se invoca.
+}
+
+// Función para el botón Copiar
 function copyCode(button) {
     const wrapper = button.closest('.code-block-wrapper');
     const codeText = wrapper.querySelector('code').innerText;
