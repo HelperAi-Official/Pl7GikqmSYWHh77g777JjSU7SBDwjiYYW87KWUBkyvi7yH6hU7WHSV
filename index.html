@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HelperAI</title>
     
-    <!-- Estilos de Highlight.js (Tema oscuro) -->
+    <!-- Estilos de Highlight.js para el coloreado de sintaxis (Tema oscuro) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 
     <style>
         :root {
             --bg-color: #121212;
             --chat-bg: #1e1e1e;
-            --primary: #f97316;
+            --primary: #f97316; /* Color naranja estilo Groq */
             --primary-hover: #ea580c;
             --text-main: #f3f4f6;
             --text-muted: #9ca3af;
@@ -86,7 +86,7 @@
             border: 1px solid var(--border-color);
         }
 
-        /* Estilos de la burbuja de código */
+        /* Estilos modernos para los bloques de código con botón de copiar */
         .code-block-wrapper {
             position: relative;
             margin: 0.8rem 0;
@@ -199,14 +199,15 @@
         </div>
     </div>
 
-    <!-- Librerías externas -->
+    <!-- Librerías de Markdown (marked.js) y Coloreado (highlight.js) -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    
-    <!-- Tu archivo independiente de Markdown -->
-    <script src="markdown.js"></script>
+
+    <!-- Carga de la configuración inyectada por GitHub Actions -->
+    <script src="config.js"></script>
 
     <script>
+        // CONFIGURACIÓN DE GROQ
         const GROQ_API_KEY = window.CONFIG ? window.CONFIG.GROQ_API_KEY : ""; 
         const API_URL = "https://api.groq.com/openai/v1/chat/completions";
         const MODEL_NAME = "qwen/qwen3.8-27b";
@@ -247,7 +248,7 @@
                         model: MODEL_NAME,
                         messages: messageHistory,
                         temperature: 0.7,
-                        max_tokens: 800
+                        max_tokens: 800 // Evita el error de tokens por minuto de Groq
                     })
                 });
 
@@ -273,16 +274,54 @@
             const messageDiv = document.createElement('div');
             messageDiv.classList.add('message', sender);
 
-            if (isMarkdown) {
-                // Usa la función de tu archivo markdown.js
-                messageDiv.innerHTML = renderMarkdown(text);
-                setupCodeBlocks(messageDiv);
+            if (isMarkdown && typeof marked !== 'undefined') {
+                messageDiv.innerHTML = marked.parse(text);
+                formatCodeBlocks(messageDiv);
             } else {
                 messageDiv.textContent = text;
             }
 
             chatContainer.appendChild(messageDiv);
             chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function formatCodeBlocks(container) {
+            container.querySelectorAll('pre code').forEach((block) => {
+                if (block.parentElement.parentElement.classList.contains('code-block-wrapper')) return;
+
+                let language = Array.from(block.classList).find(cls => cls.startsWith('language-'));
+                language = language ? language.replace('language-', '').toUpperCase() : 'CODE';
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'code-block-wrapper';
+
+                const header = document.createElement('div');
+                header.className = 'code-header';
+                header.innerHTML = `
+                    <span>[${language}]</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                `;
+
+                block.parentNode.parentNode.insertBefore(wrapper, block.parentNode);
+                wrapper.appendChild(header);
+                wrapper.appendChild(block.parentNode);
+            });
+
+            if (typeof hljs !== 'undefined') {
+                hljs.highlightAll();
+            }
+        }
+
+        function copyCode(button) {
+            const wrapper = button.closest('.code-block-wrapper');
+            const codeText = wrapper.querySelector('code').innerText;
+
+            navigator.clipboard.writeText(codeText).then(() => {
+                button.textContent = '¡Copiado!';
+                setTimeout(() => {
+                    button.textContent = 'Copiar';
+                }, 2000);
+            });
         }
     </script>
 </body>
