@@ -207,8 +207,8 @@
     <script src="config.js"></script>
 
     <script>
-        // Toma la API key desde config.js (inyectada por GitHub Actions)
-        const GROQ_API_KEY = "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"; 
+        // Obtiene la API Key de config.js de manera segura (con respaldo por si acaso)
+        const GROQ_API_KEY = (window.CONFIG && window.CONFIG.GROQ_API_KEY) ? window.CONFIG.GROQ_API_KEY : ""; 
         const API_URL = "https://api.groq.com/openai/v1/chat/completions";
         const MODEL_NAME = "qwen/qwen3.8-27b";
 
