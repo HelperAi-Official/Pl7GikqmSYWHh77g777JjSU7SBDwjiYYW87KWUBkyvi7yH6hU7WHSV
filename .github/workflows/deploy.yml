@@ -1,0 +1,23 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ] # O master, dependiendo de cómo se llame tu rama principal
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Inject API Key securely
+        run: |
+          # Esto busca el texto falso en tu config.js y lo cambia por tu secreto de GitHub de forma automática
+          sed -i 's|INJECTED_BY_GITHUB_ACTIONS|${{ secrets.GROQ_API_KEY }}|g' config.js
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .
