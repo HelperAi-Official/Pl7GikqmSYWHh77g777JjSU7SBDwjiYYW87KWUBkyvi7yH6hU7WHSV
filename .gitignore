@@ -1,0 +1,14 @@
+# Archivos de entorno y credenciales
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Dependencias (si usas Node.js)
+node_modules/
+
+# Archivos del sistema operativo o editores
+.DS_Store
+Thumbs.db
+.vscode/
