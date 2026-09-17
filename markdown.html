@@ -1,10 +1,10 @@
 <!-- markdown.html -->
 <script>
-    // Motor de Markdown casero optimizado y corregido
+    // Motor de Markdown definitivo corregido para listas, enlaces y estilos
     function renderMarkdown(text) {
         if (!text) return "";
 
-        // 1. Escapar HTML básico para seguridad
+        // 1. Escapar HTML básico por seguridad
         let html = text
             .replace(/&/g, "&amp;")
             .replace(/</g, "&lt;")
@@ -23,8 +23,8 @@
             </div>`;
         });
 
-        // 3. Tablas Markdown básicas (Soporta cabecera, separador y celdas)
-        html = html.replace(/\|(.+)\|\n\|([-\s|]+)\\|\n([\s\S]*?)(\n\n|$)/g, (match, headerRow, sepRow, bodyRows) => {
+        // 3. Tablas Markdown
+        html = html.replace(/\|(.+)\|\n\|([-\s|:]+)\\|\n([\s\S]*?)(\n\n|$)/g, (match, headerRow, sepRow, bodyRows) => {
             let headers = headerRow.split('|').filter(c => c.trim() !== '').map(c => `<th>${c.trim()}</th>`).join('');
             let rows = bodyRows.trim().split('\n').map(row => {
                 let cells = row.split('|').filter(c => c.trim() !== '').map(c => `<td>${c.trim()}</td>`).join('');
@@ -36,7 +36,8 @@
             </table>`;
         });
 
-        // 4. Encabezados (#, ##, ###)
+        // 4. Encabezados (####, ###, ##, #)
+        html = html.replace(/^#### (.*$)/gim, '<h4>$1</h4>');
         html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
         html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
         html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
@@ -44,22 +45,26 @@
         // 5. Blockquotes (> texto)
         html = html.replace(/^&gt; (.*$)/gim, '<blockquote>$1</blockquote>');
 
-        // 6. Listas desordenadas (- o *) - Evitando que choquen con guiones de texto normal
-        html = html.replace(/^[-\*]\s+(.*$)/gim, '<ul><li>$1</li></ul>');
-        html = html.replace(/<\/ul>\s*<ul>/g, '');
+        // 6. Listas desordenadas con - o * (Procesadas ANTES de las cursivas para evitar conflictos)
+        html = html.replace(/^[-\*]\s+(.*$)/gim, '<li>$1</li>');
+        html = html.replace(/(<li>[\s\S]*?<\/li>)+/g, '<ul style="margin-left: 1.2rem; margin-bottom: 0.6rem;">$&</ul>');
 
         // 7. Listas ordenadas (1., 2., etc.)
-        html = html.replace(/^\d+\.\s+(.*$)/gim, '<ol><li>$1</li></ol>');
-        html = html.replace(/<\/ol>\s*<ol>/g, '');
+        html = html.replace(/^\d+\.\s+(.*$)/gim, '<li>$1</li>');
+        html = html.replace(/(<li>[\s\S]*?<\/li>)+/g, (match) => {
+            // Evitar duplicar ol si ya es una lista desordenada
+            if (match.includes('<ul>')) return match;
+            return `<ol style="margin-left: 1.2rem; margin-bottom: 0.6rem;">${match}</ol>`;
+        });
 
-        // 8. Enlaces ([Texto](URL))
-        html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color: #f97316; text-decoration: underline;">$1</a>');
+        // 8. Enlaces ([Texto](URL)) - Soporta saltos de línea intermedios
+        html = html.replace(/\[([^\]]+)\]\s*\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color: #f97316; text-decoration: underline;">$1</a>');
 
-        // 9. Negritas (***texto*** o **texto**) - Orden importante antes de cursivas
+        // 9. Negritas (***texto*** o **texto**)
         html = html.replace(/\*\*\*([^*]+)\*\*\*/g, '<strong><em>$1</em></strong>');
         html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
 
-        // 10. Cursivas (*texto* - asegurando que no tome guiones bajos o asteriscos de listas)
+        // 10. Cursivas (*texto* o _texto_)
         html = html.replace(/(^|[^\\*])\*([^*]+)\*/g, '$1<em>$2</em>');
 
         // 11. Tachado (~~texto~~)
@@ -72,13 +77,15 @@
         html = html.replace(/\r\n/g, '\n');
         html = html.replace(/\n/g, '<br>');
 
-        // Limpieza de etiquetas <br> sobrantes en elementos de bloque
+        // Limpieza de etiquetas <br> sobrantes tras bloques estructurales
         html = html.replace(/<\/div><br>/g, '</div>');
-        html = html.replace(/<\/blockquote><br>/g, 'blockquote>');
+        html = html.replace(/<\/blockquote><br>/g, '</blockquote>');
         html = html.replace(/<\/ul><br>/g, '</ul>');
         html = html.replace(/<\/ol><br>/g, '</ol>');
         html = html.replace(/<\/table><br>/g, '</table>');
-        html = html.replace(/<\/h[1-3]><br>/g, (match) => match.replace('<br>', ''));
+        html = html.replace(/<\/h[1-4]><br>/g, (match) => match.replace('<br>', ''));
+        html = html.replace(/<br>\s*<ul>/g, '<ul>');
+        html = html.replace(/<br>\s*<ol>/g, '<ol>');
 
         return html;
     }
