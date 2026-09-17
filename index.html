@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HelperAI</title>
     
-    <!-- Estilos de Highlight.js para el coloreado de sintaxis (Tema oscuro) -->
+    <!-- Estilos de Highlight.js (Tema oscuro) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 
     <style>
         :root {
             --bg-color: #121212;
             --chat-bg: #1e1e1e;
-            --primary: #f97316; /* Color naranja estilo Groq */
+            --primary: #f97316;
             --primary-hover: #ea580c;
             --text-main: #f3f4f6;
             --text-muted: #9ca3af;
@@ -86,7 +86,7 @@
             border: 1px solid var(--border-color);
         }
 
-        /* Estilos modernos para los bloques de código con botón de copiar */
+        /* Estilos limpios para los bloques de código */
         .code-block-wrapper {
             position: relative;
             margin: 0.8rem 0;
@@ -199,15 +199,15 @@
         </div>
     </div>
 
-    <!-- Librerías de Markdown (marked.js) y Coloreado (highlight.js) -->
+    <!-- Librerías externas -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
-    <!-- Carga de la configuración inyectada por GitHub Actions -->
+    <!-- Archivo de configuración que contiene tu API Key inyectada -->
     <script src="config.js"></script>
 
     <script>
-        // CONFIGURACIÓN DE GROQ
+        // Toma la API key desde config.js (inyectada por GitHub Actions)
         const GROQ_API_KEY = window.CONFIG ? window.CONFIG.GROQ_API_KEY : ""; 
         const API_URL = "https://api.groq.com/openai/v1/chat/completions";
         const MODEL_NAME = "qwen/qwen3.8-27b";
@@ -248,7 +248,7 @@
                         model: MODEL_NAME,
                         messages: messageHistory,
                         temperature: 0.7,
-                        max_tokens: 800 // Evita el error de tokens por minuto de Groq
+                        max_tokens: 800
                     })
                 });
 
